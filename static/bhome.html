@@ -1,0 +1,10 @@
+<script src="/realtime-order/socket.io.js"></script>
+<script>
+  var bhome = io('/bhome', {path:'/realtime-order'});
+  bhome.on('connect', function (data) {
+    console.log('on connect', data);
+    bhome.emit('sub', {btype: ['a', 'b', 'c']}, d=>console.log(d));
+  });
+  bhome.on('order', msg=>document.querySelector('#root').innerText = JSON.stringify(msg, undefined, 4))
+</script>
+<pre id="root"></pre>

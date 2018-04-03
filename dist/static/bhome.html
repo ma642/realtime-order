@@ -1,0 +1,11 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var jwt = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcGVuX2lkIjoiNTY5ZGEyYjdlZjFjZjI3OWExNDNmYTk5IiwibmFtZSI6IiIsImVtYWlsIjoiIiwiYWRtaW5pc3RyYXRvciI6ZmFsc2UsImV4cCI6MTU0NjYwMzU0MjcxNywiaXNzIjoiYzRmNzcyMDYzZGNmYTk4ZTljNTAiLCJhdWQiOiJlZHgudW5pcHVzLmNuIn0.TVtyOq3FmJWMxWZ-EFyQqzIBLzmkyWHmO3NsKE-sfqk'
+  var bhome = io('/bhome');
+  bhome.on('connect', function (data) {
+    console.log('on connect', data);
+    bhome.emit('sub', {btype: ['a', 'b', 'c']}, d=>console.log(d));
+  });
+  bhome.on('order', msg=>document.querySelector('#root').innerText = msg)
+</script>
+<div id="root"></div>
