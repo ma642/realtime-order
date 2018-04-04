@@ -20,15 +20,16 @@ const db = 1
 const redisOpts = {port, host, db}
 const subClient = new Redis(redisOpts);
 const pubClient = new Redis(redisOpts);
-
+logger.info('host:', host, ':' , port)
 var io = require('socket.io-emitter')(pubClient);
-const ns = io.of('/bhome')
+const ns = io.of(config.DEFAULT_NS)
 
 //=================main here
 observer({
 	subClient,
 	pubClient,
-	socket: io.of(config.DEFAULT_NS)
+	socket: ns,
 }, (err)=>{
-	logger.error('error to start watcher', err)
+	err && logger.error('error to start watcher', err)
+	!err && logger.info('start watch :', host, port)
 })
