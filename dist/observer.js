@@ -16,6 +16,10 @@ var _config = require('./config');
 
 var config = _interopRequireWildcard(_config);
 
+var _cluster = require('cluster');
+
+var _cluster2 = _interopRequireDefault(_cluster);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -25,6 +29,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 	Here we just subscribe the message and send to the front end.
 
 */
+
 var logger = new _winston2.default.Logger({
 	level: process.env.LOG_LEVEL || 'debug',
 	transports: [new _winston2.default.transports.Console({
@@ -33,10 +38,11 @@ var logger = new _winston2.default.Logger({
 
 });
 
-exports.default = function (_ref, cb) {
+var start = function start(_ref, cb) {
 	var socket = _ref.socket,
 	    subClient = _ref.subClient,
-	    pubClient = _ref.pubClient;
+	    pubClient = _ref.pubClient,
+	    workerId = _ref.workerId;
 
 	logger.info("watch redis port: ");
 
@@ -54,8 +60,12 @@ exports.default = function (_ref, cb) {
 		};
 		try {
 			var msg = JSON.parse(message);
+			if (msg.type != 'order') {
+				logger.debug('get trade type');
+				return;
+			}
 
-			var _ref2 = msg || {},
+			var _ref2 = msg.data || {},
 			    CustomerID = _ref2.CustomerID;
 
 			if (!CustomerID) {
@@ -63,16 +73,16 @@ exports.default = function (_ref, cb) {
 				return;
 			}
 			var dealError = function dealError(err) {
-				logger.info('user for ', CustomerID, 'not online', socketId, 'msg :', msg, err);
+				logger.error('user for ', CustomerID, 'msg :', msg, err);
 			};
 			pubClient.hget(config.USER_SOCKET_MAP_REDIS, CustomerID).then(function (socketId) {
-				logger.debug('get socket from CustomerID', CustomerID, ' to ', socketId, err);
+				logger.debug('get socket from CustomerID', CustomerID, ' to ', socketId);
 				if (!socketId) {
 					dealError(new Error('empty of CustomerID ' + CustomerID));
 					return;
 				}
 				//emit message to front end.
-				socket.to(socketId).emit('order', msg);
+				socket.to(socketId).emit('order', msg.data);
 			}).catch(function (err) {
 				dealError(err);
 			});
@@ -83,3 +93,5 @@ exports.default = function (_ref, cb) {
 
 	cb && cb();
 };
+
+exports.default = start;

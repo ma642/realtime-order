@@ -1,11 +1,13 @@
 import winston from 'winston'
 import Redis from 'ioredis'
 import * as config from './config'
+import cluster from 'cluster'
 /**
 
 	Here we just subscribe the message and send to the front end.
 
 */
+
 const logger = new winston.Logger({
     level: process.env.LOG_LEVEL || 'debug',
     transports: [
@@ -16,7 +18,8 @@ const logger = new winston.Logger({
     
   });
 
-export default ({socket, subClient, pubClient}, cb) =>{
+
+const start =  ({socket, subClient, pubClient, workerId}, cb) =>{
 	logger.info("watch redis port: ")
 
 	subClient.subscribe('CustomerChannel', function (err, count) {
@@ -65,3 +68,5 @@ export default ({socket, subClient, pubClient}, cb) =>{
 
 	cb&&cb()
 }
+
+export default start

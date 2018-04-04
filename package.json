@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js 3105 16379 127.0.0.1 --exec babel-node --presets es2015,stage-2",
-    "ob": "nodemon observer.js 16379 127.0.0.1 --exec babel-node --presets es2015,stage-2",
-    "build": "babel index.js client.js observer.js config.js -d dist --presets es2015,stage-2 &&  cp -r ./static ./dist",
+    "watch": "nodemon watch.js 16379 127.0.0.1 --exec babel-node --presets es2015,stage-2",
+    "build": "babel index.js watch.js observer.js config.js -d dist --presets es2015,stage-2 &&  cp -r ./static ./dist",
     "buildf": "webpack --progress --colors --config webpack.config.js",
     "buildfp": "NODE_ENV=production webpack --progress --colors --config webpack.config.js",
     "server": "node dist/index.js",
