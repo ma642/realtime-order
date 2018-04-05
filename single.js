@@ -75,7 +75,7 @@ io.use((socket, next) => {
   try{
     
     //this is for debug
-    if(process.env.NODE_ENV != "production") {
+    if(process.env.NODE_ENV != "production" && !uuid) {
       socket.request.CustomerID = '13810886181'
       next() 
       return
