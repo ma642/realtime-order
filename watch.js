@@ -27,7 +27,7 @@ const ns = io.of(config.DEFAULT_NS)
 //=================main here
 observer({
 	subClient,
-	pubClient,
+	getSocket: subClient.hget.bind(null, config.siteMap()),
 	socket: ns,
 }, (err)=>{
 	err && logger.error('error to start watcher', err)

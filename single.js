@@ -2,6 +2,7 @@ import express from 'express' //require('express')
 import socketIO from 'socket.io'
 import http from 'http'
 import winston from 'winston'
+import observer from './observer'
 import Redis from 'ioredis';
 import cluster from 'cluster'
 const os      = require('os');
@@ -22,6 +23,7 @@ const logger = new winston.Logger({
     
   });
 
+const processCustomerMapper = {}
 
 const host = process.argv[4]
 const port = parseInt(process.argv[3]) || 16379
@@ -110,25 +112,17 @@ const onActionSub = ({socket, CustomerID}) => (msg, cb) => {
   if (!CustomerID) {
     cb&&cb('error', 'no customer id exist.')
   };
-  pubClient.hset(config.siteMap(), CustomerID, socket.id, (err, msg)=>{
-    logger.info('user customerid=', CustomerID, '  put map result: msg=', msg, ' error=', err)
-    if (err) {
-      logger.error(err)
-      cb && cb('error', err.message)
-      return
-    };
-    cb & cb('ok')
-  })
+  processCustomerMapper[CustomerID] = {
+    socketId: socket.id,
+    time: new Date()
+  }
   
 }
 
 const onDisconnect = ({socket}) => () => {
   const {CustomerID} = socket.request
   logger.info(CustomerID, ' : disconnect. socket.id=', socket.id)
-  //TODO remove the user to socket.id 的map
-  pubClient.hdel(config.siteMap(), CustomerID, (err, msg)=>{
-    logger.info('user ', CustomerID, '  delete map result: msg=', msg, ' error=', err)
-  })
+  delete processCustomerMapper[CustomerID]
 }
 
 const onConnect = ({ns, io})=>{
@@ -149,42 +143,38 @@ onConnect({io, ns:config.DEFAULT_NS})
 //this can be remove if you don't have any static file.
 app.use('/html', express.static(__dirname + '/static'));
 
-//below are the  internal api. 
-// const validateInternal = (req, res, next) => {
-//   logger.debug('the heads', req.headers)
-//   if(req.headers.bhome_key != '7odFgBpj') {
-//     res.status(401).send('forbbiden')
-//     return
-//   }
-//   next()
-// }
+// below are the  internal api. 
+const validateInternal = (req, res, next) => {
+  logger.debug('the heads', req.headers)
+  if(req.headers.bhome_key != '7odFgBpj') {
+    res.status(401).send('forbbiden')
+    return
+  }
+  next()
+}
 
-// const sendMsg = (req, res)=>{
-//   const {ns, id} = req.params
-//   const {msg} = req.query
-//   if(!msg) {
-//     logger.warn('send a empty mssage. ', ns, id)
-//     res.status(400).send('msg in query string should be sent')
-//     return
-//   }
-//   logger.info('msg ', req.query, 'to ', ns, ' of ', id)
-//   const sender = id?io.of(ns).to(id):io.of(ns)
-//   sender.emit(...((msg instanceof Array)?msg:[msg]))
-//   res.json({msg: 'ok'})
-// }
+app.use(/\/client\/?/, validateInternal, (req, res)=>{
+  res.json(processCustomerMapper)
+})
+app.use('/client/:CustomerID', validateInternal, (req, res)=>{
+  res.json(processCustomerMapper[req.params.CustomerID])
+})
 
-// const handerList = (req, res)=>{
-//   io.of(req.params.ns||'/').adapter.allRooms((err, rooms) => {
-//     res.json({rooms})
-//   });
-// }
+observer({
+  subClient,
+  getSocket: (CustomerID)=>{
+    return new Promise((resolve, reject)=>{
+      const socketInfo = processCustomerMapper[CustomerID]
+      logger.debug('getSocket of ', CustomerID, ' result: ', socketInfo)
+      resolve(socketInfo && socketInfo.socketId)
+    })
+  },
+  socket: io.of(config.DEFAULT_NS),
+}, (err)=>{
+  err && logger.error('error to start watcher', err)
+  !err && logger.info('start watch :', host, port)
+})
 
-// app.use('/send/:ns', validateInternal, sendMsg)
-// app.use('/send/:ns/:id', validateInternal, sendMsg)
-// app.use('/list/:ns', validateInternal, handerList)
-// app.use(/^\/list\/?$/i, validateInternal, handerList)
-
-//
 
 app.use(function (err, req, res, next) {
   logger.error('app error handler', err.stack)

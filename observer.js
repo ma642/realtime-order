@@ -19,7 +19,7 @@ const logger = new winston.Logger({
   });
 
 
-const start =  ({socket, subClient, pubClient}, cb) =>{
+const start =  ({socket, subClient, getSocket}, cb) =>{
 	logger.info("watch redis port: ")
 
 	subClient.subscribe('CustomerChannel', function (err, count) {
@@ -48,7 +48,7 @@ const start =  ({socket, subClient, pubClient}, cb) =>{
 	  	const dealError = (err)=>{
 		  	logger.error('user for ', CustomerID , 'msg :', msg, err)
 	  	}
-	  	pubClient.hget(config.siteMap() , CustomerID).then((socketId) => {
+	  	getSocket(CustomerID).then((socketId) => {
 		  logger.debug('get socket from CustomerID', CustomerID, ' to ', socketId);
 		  if(!socketId ) {
 		  	//dealError(new Error('empty of CustomerID ' + CustomerID))
