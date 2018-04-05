@@ -41,7 +41,7 @@ var logger = new _winston2.default.Logger({
 var start = function start(_ref, cb) {
 	var socket = _ref.socket,
 	    subClient = _ref.subClient,
-	    pubClient = _ref.pubClient;
+	    getSocket = _ref.getSocket;
 
 	logger.info("watch redis port: ");
 
@@ -74,7 +74,7 @@ var start = function start(_ref, cb) {
 			var dealError = function dealError(err) {
 				logger.error('user for ', CustomerID, 'msg :', msg, err);
 			};
-			pubClient.hget(config.siteMap(), CustomerID).then(function (socketId) {
+			getSocket(CustomerID).then(function (socketId) {
 				logger.debug('get socket from CustomerID', CustomerID, ' to ', socketId);
 				if (!socketId) {
 					//dealError(new Error('empty of CustomerID ' + CustomerID))

@@ -47,8 +47,6 @@ var logger = new _winston2.default.Logger({
 
 });
 
-logger.info('the worker ', _cluster2.default.worker);
-
 var host = process.argv[4];
 var port = parseInt(process.argv[3]) || 16379;
 var db = 1;
