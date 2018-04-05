@@ -1,5 +1,5 @@
 apps:
-  - script   : dist/index.js
+  - script   : dist/single.js
     instances: 2
     exec_mode: cluster
     name: single-service
