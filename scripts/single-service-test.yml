@@ -6,7 +6,7 @@ apps:
     args:
       - 3015
       - 6379
-      - bhomerun.mdkkee.ng.0001.apne1.cache.amazonaws.com:6379
+      - bhomerun.mdkkee.ng.0001.apne1.cache.amazonaws.com
     env_dev    :
       NODE_ENV: development
     env:
