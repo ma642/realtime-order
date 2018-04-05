@@ -66,10 +66,8 @@ io.use((socket, next) => {
   const {uuid} = cookies //req.headers.http_x_annotator_auth_token
   //define error handler
   const whenError = err => {
-    // res.status(401).json({
-    //   detail: err.message
-    // })
-    logger.error('unauthenticated connect.uuid=', uuid)
+    logger.error('get error', uuid, err)
+    next()
   }
 
   try{
@@ -84,13 +82,15 @@ io.use((socket, next) => {
     //and map the socket.id to user.
     //you should save this to a cache, such as redis.
     if(!uuid) {
-      throw new Error('expect the authenticated user')
+      logger.info('expect the authenticated user with uuid')
+      next() 
+      return
     }
     pubClient.hget(config.SESSION_SITE_IN_REDIS, uuid, (err, msg)=>{
-      if (err) { whenError(err); return};
+      if (err) { throw err};
       if (!msg) {
         logger.info('user uuid=', uuid, 'havs not authenticated')
-        whenError(new Error('user not authenticated'))
+        throw new Error('user not authenticated')
         return
       };
       const {CustomerID} = JSON.parse(msg)
@@ -99,8 +99,7 @@ io.use((socket, next) => {
     })
 
   } catch(err) {
-    //whenError(err)
-    logger.error(err)
+    whenError(err)
   }
   
 });
@@ -110,13 +109,16 @@ const onActionSub = ({socket, CustomerID}) => (msg, cb) => {
   logger.debug('sub:', socket.id, " sub-message:", msg)
   //setTimeout(()=>socket.emit('fine', 'timer'), 2000)
   if (!CustomerID) {
+    logger.info('the user sub without loggined. cannot subscribe', socket.id)
     cb&&cb('error', 'no customer id exist.')
+    return
   };
   processCustomerMapper[CustomerID] = {
     socketId: socket.id,
     time: new Date()
   }
   
+  cb&&cb('ok')
 }
 
 const onDisconnect = ({socket}) => () => {
