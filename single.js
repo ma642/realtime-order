@@ -67,7 +67,7 @@ io.use((socket, next) => {
   //define error handler
   const whenError = err => {
     logger.error('get error', uuid, err)
-    next(error)
+    next(err)
   }
 
   try{
