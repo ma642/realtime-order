@@ -2,6 +2,7 @@ apps:
   - script   : dist/index.js
     instances: 1
     exec_mode: cluster
+    max_memory_restart: 1G
     name: websocket-service
     args:
       - 3015
@@ -14,6 +15,7 @@ apps:
   - script   : dist/watch.js
     instances: 1
     name: watcher
+    max_memory_restart: 1G
     exec_mode: cluster
     args:
       - 6379
