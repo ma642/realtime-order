@@ -67,7 +67,7 @@ io.use((socket, next) => {
   //define error handler
   const whenError = err => {
     logger.error('get error', uuid, err)
-    next()
+    next(error)
   }
 
   try{
@@ -90,7 +90,7 @@ io.use((socket, next) => {
       if (err) { throw err};
       if (!msg) {
         logger.info('user uuid=', uuid, 'havs not authenticated')
-        throw new Error('user not authenticated')
+        whenError(Error('user not authenticated. uuid='+uuid))
         return
       };
       const {CustomerID} = JSON.parse(msg)
