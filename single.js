@@ -58,7 +58,8 @@ const parseCookie = (cookie)=>{
 }
 
 //validate token of jwt
-io.use((socket, next) => {
+//io.use();
+const nsUserValidate = (socket, next) => {
   const {cookie} = socket.request.headers
   const cookies = parseCookie(cookie)
   logger.info('some one connected..', cookies, cookies.uuid)
@@ -74,6 +75,7 @@ io.use((socket, next) => {
     
     //this is for debug
     if(process.env.NODE_ENV != "production" && !uuid) {
+      logger.warn('run at debug, use customerID 13810886181 when uuid is empty')
       socket.request.CustomerID = '13810886181'
       next() 
       return
@@ -82,8 +84,8 @@ io.use((socket, next) => {
     //and map the socket.id to user.
     //you should save this to a cache, such as redis.
     if(!uuid) {
-      logger.info('expect the authenticated user with uuid')
-      next() 
+      logger.warn('expect the authenticated user with uuid')
+      whenError(new Error('expect the authenticated user with uuid')) 
       return
     }
     pubClient.hget(config.SESSION_SITE_IN_REDIS, uuid, (err, msg)=>{
@@ -102,7 +104,7 @@ io.use((socket, next) => {
     whenError(err)
   }
   
-});
+}
 
 
 const onActionSub = ({socket, CustomerID}) => (msg, cb) => {
@@ -129,6 +131,7 @@ const onDisconnect = ({socket}) => () => {
 
 const onConnect = ({ns, io})=>{
   logger.info('waiting namespace comming from namespace', ns)
+  io.of(ns).use(nsUserValidate)
   io.of(ns).on('connection', function(socket, msg){
       logger.info('someone connected....', socket.id, ' --addr: ', socket.handshake.address);
       const {CustomerID} = socket.request

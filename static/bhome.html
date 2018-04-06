@@ -4,6 +4,13 @@
   bhome.on('connect', function (data) {
     console.log('on connect', data);
     bhome.emit('sub', {btype: ['a', 'b', 'c']}, d=>console.log(d));
+  })
+  bhome.on('reconnect', function (data) {
+    console.log('on reconnect', data);
+    bhome.emit('sub', {btype: ['a', 'b', 'c']}, d=>console.log(d));
+  })
+  bhome.on('error', (err)=>{
+  	console.error('===>>>', err)
   });
   bhome.on('order', msg=>document.querySelector('#root').innerText = JSON.stringify(msg, undefined, 4))
 </script>
